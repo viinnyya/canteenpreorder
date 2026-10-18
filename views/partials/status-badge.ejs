@@ -1,0 +1,2 @@
+<%# Usage: include('../partials/status-badge', { status: order.status }) %>
+<span class="badge text-bg-<%= orderStatus.BADGES[status] || 'secondary' %>"><%= orderStatus.LABELS[status] || status %></span>

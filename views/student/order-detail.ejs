@@ -1,0 +1,41 @@
+<%- include('../partials/header', { title: 'Order #' + order.id }) %>
+<a href="/orders" class="small">&larr; My orders</a>
+<h1 class="h3 mt-2 mb-3">Order #<%= order.id %></h1>
+
+<% if (notice) { %><div class="alert alert-success"><%= notice %></div><% } %>
+
+<div class="row g-3">
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <p class="mb-1"><strong>Stall:</strong> <%= order.stall_name %></p>
+        <p class="mb-1"><strong>Placed:</strong> <%= formatTime(order.created_at) %></p>
+        <p class="mb-3"><strong>Status:</strong> <%- include('../partials/status-badge', { status: order.status }) %></p>
+        <table class="table table-sm mb-2">
+          <thead><tr><th>Item</th><th>Qty</th><th class="text-end">Price</th></tr></thead>
+          <tbody>
+            <% items.forEach(function (i) { %>
+              <tr><td><%= i.name %></td><td><%= i.quantity %></td><td class="text-end"><%= peso(i.price * i.quantity) %></td></tr>
+            <% }) %>
+          </tbody>
+          <tfoot><tr><th colspan="2">Total</th><th class="text-end"><%= peso(order.total) %></th></tr></tfoot>
+        </table>
+        <% if (order.status === 'ready') { %>
+          <div class="alert alert-success mb-0">Your order is ready. Show this page at the counter to pick it up.</div>
+        <% } else if (order.status === 'rejected') { %>
+          <div class="alert alert-danger mb-0">The stall could not verify your payment. Please contact the stall.</div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h6">Payment</h2>
+        <p class="mb-2 small"><strong>GCash reference:</strong> <%= order.payment_ref %></p>
+        <img src="/orders/<%= order.id %>/screenshot" alt="Your GCash receipt" class="img-fluid rounded border" style="max-height:360px">
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

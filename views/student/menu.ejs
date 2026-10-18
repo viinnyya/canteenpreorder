@@ -1,0 +1,61 @@
+<%- include('../partials/header', { title: stall.name }) %>
+<a href="/student" class="small">&larr; All stalls</a>
+<h1 class="h3 mt-2 mb-1"><%= stall.name %></h1>
+<p class="text-muted"><%= stall.description || '' %></p>
+
+<% if (errors && errors.length) { %>
+  <div class="alert alert-danger">
+    <ul class="mb-0"><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul>
+  </div>
+<% } %>
+
+<% if (items.length === 0) { %>
+  <div class="alert alert-info">This stall has no available items right now.</div>
+<% } else { %>
+  <form method="POST" action="/stalls/<%= stall.id %>/order" enctype="multipart/form-data" novalidate>
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h2 class="h5">1. Choose your items</h2>
+        <table class="table align-middle mb-2">
+          <thead><tr><th>Item</th><th>Price</th><th style="width:110px">Quantity</th></tr></thead>
+          <tbody>
+            <% items.forEach(function (i) { %>
+              <tr>
+                <td><%= i.name %></td>
+                <td><%= peso(i.price) %></td>
+                <td>
+                  <input type="number" min="0" max="20" class="form-control form-control-sm qty"
+                         name="qty_<%= i.id %>" data-price="<%= i.price %>"
+                         value="<%= values['qty_' + i.id] || 0 %>">
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+        <div class="text-end fw-semibold">Total: &#8369;<span id="order-total">0.00</span></div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h2 class="h5">2. Pay with GCash</h2>
+        <p class="text-muted small">
+          Send the total to the stall's GCash, then enter the reference number and upload a screenshot
+          of the receipt. The stall checks it before accepting your order.
+        </p>
+        <div class="mb-3">
+          <label for="paymentRef" class="form-label">GCash reference number</label>
+          <input type="text" class="form-control" id="paymentRef" name="paymentRef" value="<%= values.paymentRef || '' %>" autocomplete="off">
+        </div>
+        <div class="mb-0">
+          <label for="screenshot" class="form-label">Receipt screenshot (JPG, PNG or WEBP, up to 3 MB)</label>
+          <input type="file" class="form-control" id="screenshot" name="screenshot" accept="image/jpeg,image/png,image/webp">
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Place pre-order</button>
+  </form>
+  <script src="/js/order.js"></script>
+<% } %>
+<%- include('../partials/footer') %>
