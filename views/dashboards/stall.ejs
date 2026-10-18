@@ -1,0 +1,11 @@
+<%- include('../partials/header', { title: 'Stall' }) %>
+<h1 class="h3 mb-1">Stall dashboard</h1>
+<% if (stall) { %>
+  <p class="text-muted"><%= stall.name %> &middot; <%= stall.description || '' %></p>
+  <div class="card shadow-sm"><div class="card-body">
+    Incoming orders and menu management will appear here.
+  </div></div>
+<% } else { %>
+  <div class="alert alert-warning">No stall is linked to this account yet. Ask an administrator.</div>
+<% } %>
+<%- include('../partials/footer') %>

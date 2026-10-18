@@ -4,6 +4,7 @@ const { homeFor } = require('../controllers/authController');
 const router = express.Router();
 
 router.use('/', require('./auth'));
+router.use('/', require('./dashboard'));
 
 // Home: send logged-in users to their own page, everyone else to login.
 router.get('/', (req, res) => {
