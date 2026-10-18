@@ -1,0 +1,59 @@
+<%- include('../partials/header', { title: 'Order #' + order.id }) %>
+<a href="/stall/orders" class="small">&larr; Orders</a>
+<h1 class="h3 mt-2 mb-3">Order #<%= order.id %></h1>
+
+<% if (notice) { %><div class="alert alert-success"><%= notice %></div><% } %>
+<% if (errors && errors.length) { %>
+  <div class="alert alert-danger">
+    <ul class="mb-0"><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul>
+  </div>
+<% } %>
+
+<div class="row g-3">
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <p class="mb-1"><strong>Student:</strong> <%= order.student_name %> (<%= order.student_email %>)</p>
+        <p class="mb-1"><strong>Placed:</strong> <%= formatTime(order.created_at) %></p>
+        <p class="mb-3"><strong>Status:</strong> <%- include('../partials/status-badge', { status: order.status }) %></p>
+        <table class="table table-sm mb-3">
+          <thead><tr><th>Item</th><th>Qty</th><th class="text-end">Price</th></tr></thead>
+          <tbody>
+            <% items.forEach(function (i) { %>
+              <tr><td><%= i.name %></td><td><%= i.quantity %></td><td class="text-end"><%= peso(i.price * i.quantity) %></td></tr>
+            <% }) %>
+          </tbody>
+          <tfoot><tr><th colspan="2">Total</th><th class="text-end"><%= peso(order.total) %></th></tr></tfoot>
+        </table>
+
+        <% if (transitions.length === 0) { %>
+          <p class="text-muted mb-0">This order is finished. No further changes are possible.</p>
+        <% } else { %>
+          <div class="d-flex flex-wrap gap-2">
+            <% transitions.forEach(function (t) { %>
+              <form method="POST" action="/stall/orders/<%= order.id %>/status" class="m-0">
+                <input type="hidden" name="status" value="<%= t %>">
+                <button type="submit" class="btn <%= (t === 'rejected' || t === 'no_show') ? 'btn-outline-danger' : 'btn-primary' %>">
+                  <%= orderStatus.ACTIONS[t] %>
+                </button>
+              </form>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h6">Payment proof</h2>
+        <p class="mb-2 small"><strong>GCash reference:</strong> <%= order.payment_ref %></p>
+        <p class="text-muted small">Match this reference number and the amount in your own GCash app before accepting.</p>
+        <a href="/orders/<%= order.id %>/screenshot" target="_blank" rel="noopener">
+          <img src="/orders/<%= order.id %>/screenshot" alt="GCash receipt" class="img-fluid rounded border" style="max-height:420px">
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>
