@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const db = require('./config/db');
+const sessionMiddleware = require('./config/session');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,11 +13,23 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Stage 1 placeholder route: confirms the server and database are connected.
-// Replaced by real routes in the next stages.
-app.get('/', (req, res) => {
-  const stallCount = db.prepare('SELECT COUNT(*) AS n FROM stalls').get().n;
-  res.send(`Canteen Pre-Order server is running. Stalls in database: ${stallCount}`);
+app.use(sessionMiddleware);
+
+// Make the logged-in user available to every EJS view as `user`.
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null;
+  next();
+});
+
+app.use(require('./routes'));
+
+app.use((req, res) => {
+  res.status(404).render('errors/404');
+});
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).render('errors/500');
 });
 
 app.listen(PORT, '0.0.0.0', () => {
