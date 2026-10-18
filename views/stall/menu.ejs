@@ -1,0 +1,71 @@
+<%- include('../partials/header', { title: 'Manage menu' }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Menu &middot; <%= stall.name %></h1>
+  <a href="/stall" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
+</div>
+
+<% if (notice) { %><div class="alert alert-success"><%= notice %></div><% } %>
+<% if (errors && errors.length) { %>
+  <div class="alert alert-danger">
+    <ul class="mb-0"><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul>
+  </div>
+<% } %>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h2 class="h5">Add an item</h2>
+    <form method="POST" action="/stall/menu" class="row g-2 align-items-end" novalidate>
+      <div class="col-md-6">
+        <label for="name" class="form-label">Name</label>
+        <input type="text" class="form-control" id="name" name="name" value="<%= values.name || '' %>">
+      </div>
+      <div class="col-md-3">
+        <label for="price" class="form-label">Price (PHP)</label>
+        <input type="text" inputmode="decimal" class="form-control" id="price" name="price" value="<%= values.price || '' %>">
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-primary w-100">Add item</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h2 class="h5">Your items</h2>
+    <% if (items.length === 0) { %>
+      <p class="text-muted mb-0">No items yet. Add your first one above.</p>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Name</th><th style="width:140px">Price</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+          <tbody>
+            <% items.forEach(function (i) { %>
+              <tr>
+                <td>
+                  <%# One form per row; its fields and buttons point to it with the form attribute %>
+                  <form id="item-<%= i.id %>" method="POST" action="/stall/menu/<%= i.id %>"></form>
+                  <input type="text" class="form-control form-control-sm" name="name" form="item-<%= i.id %>" value="<%= i.name %>">
+                </td>
+                <td><input type="text" inputmode="decimal" class="form-control form-control-sm" name="price" form="item-<%= i.id %>" value="<%= i.price.toFixed(2) %>"></td>
+                <td>
+                  <% if (i.available) { %><span class="badge text-bg-success">Available</span>
+                  <% } else { %><span class="badge text-bg-secondary">Unavailable</span><% } %>
+                </td>
+                <td class="text-end text-nowrap">
+                  <button type="submit" form="item-<%= i.id %>" class="btn btn-sm btn-primary">Save</button>
+                  <button type="submit" form="item-<%= i.id %>" formaction="/stall/menu/<%= i.id %>/toggle" class="btn btn-sm btn-outline-secondary">
+                    <%= i.available ? 'Mark unavailable' : 'Mark available' %>
+                  </button>
+                  <button type="submit" form="item-<%= i.id %>" formaction="/stall/menu/<%= i.id %>/delete" class="btn btn-sm btn-outline-danger"
+                          onclick="return confirm('Delete this item?');">Delete</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+<%- include('../partials/footer') %>
