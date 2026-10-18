@@ -1,0 +1,31 @@
+<%- include('../partials/header', { title: 'My orders', refresh: 15 }) %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">My orders</h1>
+  <a href="/student" class="btn btn-outline-secondary btn-sm">Browse stalls</a>
+</div>
+<p class="text-muted small">This page refreshes every 15 seconds so you can follow your order.</p>
+
+<% if (orders.length === 0) { %>
+  <div class="alert alert-info">You have no orders yet.</div>
+<% } else { %>
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>#</th><th>Stall</th><th>Placed</th><th>Total</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <% orders.forEach(function (o) { %>
+            <tr>
+              <td><%= o.id %></td>
+              <td><%= o.stall_name %></td>
+              <td><%= formatTime(o.created_at) %></td>
+              <td><%= peso(o.total) %></td>
+              <td><%- include('../partials/status-badge', { status: o.status }) %></td>
+              <td class="text-end"><a href="/orders/<%= o.id %>" class="btn btn-sm btn-outline-primary">View</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+<%- include('../partials/footer') %>
