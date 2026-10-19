@@ -37,15 +37,41 @@
   </div>
   <div class="col-lg-7">
     <div class="card shadow-sm"><div class="card-body">
-      <h2 class="h5">Existing stalls</h2>
+      <h2 class="h5">Stalls</h2>
       <div class="table-responsive">
-        <table class="table table-sm mb-0">
-          <thead><tr><th>Stall</th><th>Login email</th><th>Created</th></tr></thead>
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Stall</th><th>Login email</th><th>Orders</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
           <tbody>
             <% stalls.forEach(function (s) { %>
-              <tr><td><strong><%= s.name %></strong><br><span class="text-muted small"><%= s.description || '' %></span></td><td><%= s.email %></td><td><%= formatTime(s.created_at) %></td></tr>
+              <tr class="<%= s.active ? '' : 'table-secondary' %>">
+                <td><strong><%= s.name %></strong><br><span class="text-muted small"><%= s.description || '' %></span></td>
+                <td><%= s.email %></td>
+                <td><%= s.order_count %></td>
+                <td><span class="badge text-bg-<%= s.active ? 'success' : 'secondary' %>"><%= s.active ? 'Active' : 'Removed' %></span></td>
+                <td class="text-end">
+                  <details class="d-inline-block text-start me-1">
+                    <summary class="btn btn-sm btn-outline-secondary">Menu CSV</summary>
+                    <div class="border rounded p-2 mt-1 bg-body" style="min-width:260px">
+                      <a class="btn btn-sm btn-outline-primary mb-2" href="/admin/stalls/<%= s.id %>/menu.csv">Download menu</a>
+                      <form method="POST" action="/admin/stalls/<%= s.id %>/menu-import" enctype="multipart/form-data" class="m-0">
+                        <input type="file" name="file" accept=".csv,text/csv" class="form-control form-control-sm mb-1" required>
+                        <button class="btn btn-sm btn-primary">Import into this stall</button>
+                      </form>
+                    </div>
+                  </details>
+                  <% if (s.active) { %>
+                    <form method="POST" action="/admin/stalls/<%= s.id %>/remove" class="d-inline"
+                          data-msg="Remove <%= s.name %>? Its login will be disabled and students will no longer see it."
+                          onsubmit="return confirm(this.dataset.msg);">
+                      <button class="btn btn-sm btn-outline-danger">Remove</button>
+                    </form>
+                  <% } else { %>
+                    <form method="POST" action="/admin/stalls/<%= s.id %>/restore" class="d-inline"><button class="btn btn-sm btn-success">Restore</button></form>
+                  <% } %>
+                </td>
+              </tr>
             <% }) %>
-            <% if (stalls.length === 0) { %><tr><td colspan="3" class="text-muted">No stalls yet.</td></tr><% } %>
+            <% if (stalls.length === 0) { %><tr><td colspan="5" class="text-muted">No stalls yet.</td></tr><% } %>
           </tbody>
         </table>
       </div>

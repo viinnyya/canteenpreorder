@@ -60,7 +60,7 @@ function handleUpload(req, res, next) {
 function showStallMenu(req, res) {
   const id = parseId(req.params.id);
   const stall = id ? Stall.findById(id) : null;
-  if (!stall) return notFound(res);
+  if (!stall || !stall.active) return notFound(res);
 
   res.render('student/menu', {
     stall,
@@ -75,7 +75,7 @@ function placeOrder(req, res, next) {
   try {
     const id = parseId(req.params.id);
     const stall = id ? Stall.findById(id) : null;
-    if (!stall) {
+    if (!stall || !stall.active) {
       removeFile(req.file);
       return notFound(res);
     }

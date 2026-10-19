@@ -31,7 +31,7 @@ const Report = {
     const { where, params } = range(filter);
     return db
       .prepare(
-        `SELECT m.name AS item, s.name AS stall,
+        `SELECT m.name AS item, s.name || CASE WHEN s.active = 0 THEN ' (removed)' ELSE '' END AS stall,
                 SUM(oi.quantity) AS sold, SUM(oi.quantity * oi.price) AS revenue
          FROM order_items oi
          JOIN orders o ON o.id = oi.order_id
@@ -49,7 +49,7 @@ const Report = {
     const { where, params } = range(filter);
     return db
       .prepare(
-        `SELECT s.name AS stall, COUNT(o.id) AS orders,
+        `SELECT s.name || CASE WHEN s.active = 0 THEN ' (removed)' ELSE '' END AS stall, COUNT(o.id) AS orders,
                 COALESCE(SUM(o.total), 0) AS revenue
          FROM stalls s
          LEFT JOIN orders o ON o.stall_id = s.id AND ${where}
@@ -79,6 +79,26 @@ const Report = {
                 COUNT(*) AS orders
          FROM orders o WHERE ${where}
          GROUP BY hour ORDER BY orders DESC, hour LIMIT 5`
+      )
+      .all(...params);
+  },
+
+  // One row per item sold, for the CSV export.
+  salesRows(filter) {
+    const { where, params } = range(filter);
+    return db
+      .prepare(
+        `SELECT o.id AS order_id, ${DAY} AS date,
+                strftime('%H:%M', o.created_at, '+8 hours') AS time,
+                s.name AS stall, m.category AS category, m.name AS item,
+                oi.quantity AS quantity, oi.price AS unit_price,
+                ROUND(oi.quantity * oi.price, 2) AS line_total, o.status AS status
+         FROM order_items oi
+         JOIN orders o ON o.id = oi.order_id
+         JOIN menu_items m ON m.id = oi.menu_item_id
+         JOIN stalls s ON s.id = o.stall_id
+         WHERE ${where}
+         ORDER BY o.id, m.name`
       )
       .all(...params);
   },
