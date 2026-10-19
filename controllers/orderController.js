@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Stall = require('../models/stall');
 const MenuItem = require('../models/menuItem');
+const CATEGORIES = require('../config/categories');
 const Order = require('../models/order');
 const { upload, UPLOAD_DIR } = require('../config/upload');
 
@@ -63,6 +64,7 @@ function showStallMenu(req, res) {
 
   res.render('student/menu', {
     stall,
+    categories: CATEGORIES,
     items: MenuItem.listByStall(stall.id, { onlyAvailable: true }),
     errors: [],
     values: {}
@@ -119,7 +121,7 @@ function placeOrder(req, res, next) {
 
     if (errors.length > 0) {
       removeFile(req.file);
-      return res.status(400).render('student/menu', { stall, items: menu, errors, values });
+      return res.status(400).render('student/menu', { stall, categories: CATEGORIES, items: menu, errors, values });
     }
 
     const orderId = Order.create({

@@ -13,14 +13,45 @@ const MenuItem = {
     return db.prepare('SELECT * FROM menu_items WHERE id = ?').get(id);
   },
 
-  create({ stallId, name, price }) {
+  create({ stallId, name, price, category = 'Meals' }) {
     return db
-      .prepare('INSERT INTO menu_items (stall_id, name, price) VALUES (?, ?, ?)')
-      .run(stallId, name, price).lastInsertRowid;
+      .prepare('INSERT INTO menu_items (stall_id, name, price, category) VALUES (?, ?, ?, ?)')
+      .run(stallId, name, price, category).lastInsertRowid;
   },
 
-  update(id, { name, price }) {
-    db.prepare('UPDATE menu_items SET name = ?, price = ? WHERE id = ?').run(name, price, id);
+  update(id, { name, price, category }) {
+    db.prepare('UPDATE menu_items SET name = ?, price = ?, category = ? WHERE id = ?').run(
+      name,
+      price,
+      category,
+      id
+    );
+  },
+
+  // Adds new items and updates existing ones (matched by name, ignoring case). All or nothing.
+  importRows(stallId, rows) {
+    const find = db.prepare('SELECT id FROM menu_items WHERE stall_id = ? AND name = ? COLLATE NOCASE');
+    const insert = db.prepare(
+      'INSERT INTO menu_items (stall_id, name, price, category, available) VALUES (?, ?, ?, ?, ?)'
+    );
+    const update = db.prepare(
+      'UPDATE menu_items SET name = ?, price = ?, category = ?, available = ? WHERE id = ?'
+    );
+    let added = 0;
+    let updated = 0;
+    db.transaction(() => {
+      for (const r of rows) {
+        const existing = find.get(stallId, r.name);
+        if (existing) {
+          update.run(r.name, r.price, r.category, r.available, existing.id);
+          updated++;
+        } else {
+          insert.run(stallId, r.name, r.price, r.category, r.available);
+          added++;
+        }
+      }
+    })();
+    return { added, updated };
   },
 
   setAvailable(id, available) {

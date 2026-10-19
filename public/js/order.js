@@ -17,4 +17,24 @@
     input.addEventListener('input', update);
   });
   update();
+
+  // Menu search: hides non-matching items and any category with nothing left.
+  var search = document.getElementById('menu-search');
+  if (search) {
+    search.addEventListener('input', function () {
+      var q = search.value.trim().toLowerCase();
+      var anyVisible = false;
+      document.querySelectorAll('.menu-group').forEach(function (group) {
+        var visible = 0;
+        group.querySelectorAll('.menu-row').forEach(function (row) {
+          var show = q === '' || row.dataset.name.indexOf(q) !== -1;
+          row.hidden = !show;
+          if (show) visible++;
+        });
+        group.hidden = visible === 0;
+        if (visible > 0) anyVisible = true;
+      });
+      document.getElementById('menu-empty').hidden = anyVisible;
+    });
+  }
 })();

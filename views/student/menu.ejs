@@ -16,22 +16,29 @@
     <div class="card shadow-sm mb-3">
       <div class="card-body">
         <h2 class="h5">1. Choose your items</h2>
+        <input type="search" id="menu-search" class="form-control form-control-sm mb-2" placeholder="Search this menu..." autocomplete="off">
         <table class="table align-middle mb-2">
           <thead><tr><th>Item</th><th>Price</th><th style="width:110px">Quantity</th></tr></thead>
-          <tbody>
-            <% items.forEach(function (i) { %>
-              <tr>
-                <td><%= i.name %></td>
-                <td><%= peso(i.price) %></td>
-                <td>
-                  <input type="number" min="0" max="20" class="form-control form-control-sm qty"
-                         name="qty_<%= i.id %>" data-price="<%= i.price %>"
-                         value="<%= values['qty_' + i.id] || 0 %>">
-                </td>
-              </tr>
-            <% }) %>
-          </tbody>
+          <% categories.forEach(function (cat) {
+               var inCat = items.filter(function (i) { return i.category === cat; });
+               if (inCat.length === 0) return; %>
+            <tbody class="menu-group">
+              <tr class="table-light group-head"><th colspan="3"><%= cat %></th></tr>
+              <% inCat.forEach(function (i) { %>
+                <tr class="menu-row" data-name="<%= i.name.toLowerCase() %>">
+                  <td><%= i.name %></td>
+                  <td><%= peso(i.price) %></td>
+                  <td>
+                    <input type="number" min="0" max="20" class="form-control form-control-sm qty"
+                           name="qty_<%= i.id %>" data-price="<%= i.price %>"
+                           value="<%= values['qty_' + i.id] || 0 %>">
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          <% }) %>
         </table>
+        <p id="menu-empty" class="text-muted small" hidden>No items match your search.</p>
         <div class="text-end fw-semibold">Total: &#8369;<span id="order-total">0.00</span></div>
       </div>
     </div>
