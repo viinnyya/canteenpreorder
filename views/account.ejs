@@ -1,0 +1,29 @@
+<%- include('partials/header', { title: 'Account' }) %>
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h1 class="h3 mb-3">My account</h1>
+    <div class="card shadow-sm mb-3"><div class="card-body">
+      <p class="mb-1"><strong>Name:</strong> <%= user.name %></p>
+      <p class="mb-1"><strong>Email:</strong> <%= user.email %></p>
+      <p class="mb-0"><strong>Role:</strong> <%= user.role %></p>
+    </div></div>
+
+    <div class="card shadow-sm"><div class="card-body">
+      <h2 class="h5">Change password</h2>
+      <% if (errors.length) { %>
+        <div class="alert alert-danger"><ul class="mb-0"><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul></div>
+      <% } %>
+      <form method="POST" action="/account/password" novalidate>
+        <div class="mb-2"><label class="form-label" for="currentPassword">Current password</label>
+          <input type="password" class="form-control" id="currentPassword" name="currentPassword" autocomplete="current-password"></div>
+        <div class="mb-2"><label class="form-label" for="newPassword">New password (at least 8 characters)</label>
+          <input type="password" class="form-control" id="newPassword" name="newPassword" autocomplete="new-password"></div>
+        <div class="mb-3"><label class="form-label" for="confirmPassword">Confirm new password</label>
+          <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" autocomplete="new-password"></div>
+        <button class="btn btn-primary" type="submit">Change password</button>
+      </form>
+      <p class="small text-muted mt-3 mb-0">You will be logged out and asked to log in again with the new password.</p>
+    </div></div>
+  </div>
+</div>
+<%- include('partials/footer') %>
