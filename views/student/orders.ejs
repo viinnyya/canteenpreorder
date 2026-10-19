@@ -11,13 +11,14 @@
   <div class="card shadow-sm">
     <div class="table-responsive">
       <table class="table align-middle mb-0">
-        <thead><tr><th>#</th><th>Stall</th><th>Placed</th><th>Total</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>#</th><th>Stall</th><th>Placed</th><th>Pickup</th><th>Total</th><th>Status</th><th></th></tr></thead>
         <tbody>
           <% orders.forEach(function (o) { %>
             <tr>
               <td><%= o.id %></td>
               <td><%= o.stall_name %></td>
               <td><%= formatTime(o.created_at) %></td>
+              <td><%= formatPickup(o.pickup_time) %></td>
               <td><%= peso(o.total) %></td>
               <td><%- include('../partials/status-badge', { status: o.status }) %></td>
               <td class="text-end"><a href="/orders/<%= o.id %>" class="btn btn-sm btn-outline-primary">View</a></td>

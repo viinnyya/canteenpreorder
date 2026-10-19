@@ -3,6 +3,9 @@
 <h1 class="h3 mt-2 mb-3">Order #<%= order.id %></h1>
 
 <% if (notice) { %><div class="alert alert-success"><%= notice %></div><% } %>
+<% if (typeof errors !== 'undefined' && errors.length) { %>
+  <div class="alert alert-danger"><ul class="mb-0"><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul></div>
+<% } %>
 
 <div class="row g-3">
   <div class="col-md-7">
@@ -10,6 +13,7 @@
       <div class="card-body">
         <p class="mb-1"><strong>Stall:</strong> <%= order.stall_name %></p>
         <p class="mb-1"><strong>Placed:</strong> <%= formatTime(order.created_at) %></p>
+        <p class="mb-1"><strong>Pickup:</strong> <%= formatPickup(order.pickup_time) %></p>
         <p class="mb-3"><strong>Status:</strong> <%- include('../partials/status-badge', { status: order.status }) %></p>
         <table class="table table-sm mb-2">
           <thead><tr><th>Item</th><th>Qty</th><th class="text-end">Price</th></tr></thead>
@@ -23,7 +27,16 @@
         <% if (order.status === 'ready') { %>
           <div class="alert alert-success mb-0">Your order is ready. Show this page at the counter to pick it up.</div>
         <% } else if (order.status === 'rejected') { %>
-          <div class="alert alert-danger mb-0">The stall could not verify your payment. Please contact the stall.</div>
+          <div class="alert alert-danger mb-0">
+            The stall rejected this order.
+            <% if (order.reject_reason) { %><br><strong>Reason:</strong> <%= order.reject_reason %><% } %>
+          </div>
+        <% } else if (order.status === 'cancelled') { %>
+          <div class="alert alert-secondary mb-0">You cancelled this order.</div>
+        <% } else if (order.status === 'pending_payment') { %>
+          <form method="POST" action="/orders/<%= order.id %>/cancel" onsubmit="return confirm('Cancel this order?');">
+            <button class="btn btn-outline-danger btn-sm">Cancel order</button>
+          </form>
         <% } %>
       </div>
     </div>

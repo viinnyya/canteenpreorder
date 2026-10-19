@@ -45,7 +45,19 @@
 
     <div class="card shadow-sm mb-3">
       <div class="card-body">
-        <h2 class="h5">2. Pay with GCash</h2>
+        <h2 class="h5">2. Pickup time</h2>
+        <select class="form-select" name="pickupTime" aria-label="Pickup time">
+          <option value="">As soon as it is ready</option>
+          <% slots.forEach(function (sl) { %>
+            <option value="<%= sl.value %>" <%= values.pickupTime === sl.value ? 'selected' : '' %>><%= sl.label %></option>
+          <% }) %>
+        </select>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h2 class="h5">3. Pay with GCash</h2>
         <p class="text-muted small">
           Send the total to the stall's GCash, then enter the reference number and upload a screenshot
           of the receipt. The stall checks it before accepting your order.

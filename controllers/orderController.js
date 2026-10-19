@@ -5,12 +5,16 @@ const MenuItem = require('../models/menuItem');
 const CATEGORIES = require('../config/categories');
 const Order = require('../models/order');
 const { upload, UPLOAD_DIR } = require('../config/upload');
+const pickup = require('../lib/pickup');
 
 const MAX_ACTIVE_ORDERS = 3;
 const MAX_QUANTITY = 20;
 const REF_PATTERN = /^[A-Z0-9][A-Z0-9 -]{5,29}$/;
 
-const NOTICES = { placed: 'Order placed! The stall will check your payment soon.' };
+const NOTICES = {
+  placed: 'Order placed! The stall will check your payment soon.',
+  cancelled: 'Your order was cancelled.'
+};
 
 const str = (v) => (typeof v === 'string' ? v : '');
 
@@ -65,6 +69,7 @@ function showStallMenu(req, res) {
   res.render('student/menu', {
     stall,
     categories: CATEGORIES,
+    slots: pickup.slots(),
     items: MenuItem.listByStall(stall.id, { onlyAvailable: true }),
     errors: [],
     values: {}
@@ -101,6 +106,11 @@ function placeOrder(req, res, next) {
     }
     if (items.length === 0 && errors.length === 0) errors.push('Choose at least one item.');
 
+    const pickupRaw = str(req.body.pickupTime).trim();
+    values.pickupTime = pickupRaw;
+    const pickupCheck = pickup.validate(pickupRaw);
+    if (!pickupCheck.ok) errors.push('That pickup time is no longer available. Please choose another.');
+
     const paymentRef = str(req.body.paymentRef).trim().toUpperCase();
     values.paymentRef = paymentRef;
     if (!REF_PATTERN.test(paymentRef)) {
@@ -121,7 +131,7 @@ function placeOrder(req, res, next) {
 
     if (errors.length > 0) {
       removeFile(req.file);
-      return res.status(400).render('student/menu', { stall, categories: CATEGORIES, items: menu, errors, values });
+      return res.status(400).render('student/menu', { stall, categories: CATEGORIES, slots: pickup.slots(), items: menu, errors, values });
     }
 
     const orderId = Order.create({
@@ -129,7 +139,8 @@ function placeOrder(req, res, next) {
       stallId: stall.id,
       items,
       paymentRef,
-      screenshotPath: req.file.filename
+      screenshotPath: req.file.filename,
+      pickupTime: pickupCheck.value
     });
     res.redirect('/orders/' + orderId + '?notice=placed');
   } catch (err) {
@@ -151,8 +162,26 @@ function showMine(req, res) {
   res.render('student/order-detail', {
     order,
     items: Order.itemsFor(order.id),
+    errors: [],
     notice: NOTICES[req.query.notice] || null
   });
+}
+
+// A student can cancel only while the stall has not yet accepted the payment.
+function cancel(req, res) {
+  const id = parseId(req.params.id);
+  const order = id ? Order.findById(id) : null;
+  if (!order || order.student_id !== req.session.user.id) return notFound(res);
+
+  if (Order.transition(order.id, 'pending_payment', 'cancelled') === 0) {
+    return res.status(400).render('student/order-detail', {
+      order: Order.findById(order.id),
+      items: Order.itemsFor(order.id),
+      errors: ['This order can no longer be cancelled because the stall has already handled it.'],
+      notice: null
+    });
+  }
+  res.redirect('/orders/' + order.id + '?notice=cancelled');
 }
 
 // Payment screenshots are private: only the student who ordered, that stall, or an admin.
@@ -175,4 +204,4 @@ function screenshot(req, res) {
   res.sendFile(path.basename(order.screenshot_path), { root: UPLOAD_DIR });
 }
 
-module.exports = { handleUpload, showStallMenu, placeOrder, listMine, showMine, screenshot };
+module.exports = { handleUpload, showStallMenu, placeOrder, listMine, showMine, cancel, screenshot };
