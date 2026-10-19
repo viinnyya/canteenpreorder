@@ -9,6 +9,7 @@ router.use('/', require('./menu'));
 router.use('/', require('./orders'));
 router.use('/', require('./stallOrders'));
 router.use('/', require('./admin'));
+router.use('/', require('./reports'));
 
 // Home: send logged-in users to their own page, everyone else to login.
 router.get('/', (req, res) => {
