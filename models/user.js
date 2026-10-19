@@ -7,6 +7,11 @@ const User = {
       .get(id);
   },
 
+  // Full row including the password hash (only for checking a password).
+  findAuthById(id) {
+    return db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+  },
+
   findByEmail(email) {
     return db
       .prepare('SELECT * FROM users WHERE email = ?')
