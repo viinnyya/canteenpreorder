@@ -15,6 +15,10 @@
   </div>
 </div>
 
+<div class="d-flex flex-wrap gap-2 mb-4">
+  <a href="/admin/stalls" class="btn btn-primary">Manage stall accounts</a>
+</div>
+
 <div class="card shadow-sm">
   <div class="card-body">
     <h2 class="h5">Stall accounts</h2>
@@ -22,7 +26,7 @@
       <thead><tr><th>Name</th><th>Email</th><th>Created</th></tr></thead>
       <tbody>
         <% stallAccounts.forEach(function (a) { %>
-          <tr><td><%= a.name %></td><td><%= a.email %></td><td><%= a.created_at %></td></tr>
+          <tr><td><%= a.name %></td><td><%= a.email %></td><td><%= formatTime(a.created_at) %></td></tr>
         <% }) %>
         <% if (stallAccounts.length === 0) { %>
           <tr><td colspan="3" class="text-muted">No stall accounts yet.</td></tr>
