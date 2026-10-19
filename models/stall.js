@@ -1,19 +1,47 @@
 const db = require('../config/db');
 
 const Stall = {
+  // Stalls students can see (removed stalls are hidden).
   all() {
-    return db.prepare('SELECT * FROM stalls ORDER BY name').all();
+    return db.prepare('SELECT * FROM stalls WHERE active = 1 ORDER BY name').all();
   },
 
-  // Stalls together with their login email, for the admin list.
+  // Every stall (including removed ones) with login email and order count, for the admin list.
   allWithAccounts() {
     return db
       .prepare(
-        `SELECT s.id, s.name, s.description, u.email, u.created_at
+        `SELECT s.id, s.name, s.description, s.active, u.email, u.created_at,
+                (SELECT COUNT(*) FROM orders o WHERE o.stall_id = s.id) AS order_count
          FROM stalls s JOIN users u ON u.id = s.user_id
-         ORDER BY s.name`
+         ORDER BY s.active DESC, s.name`
       )
       .all();
+  },
+
+  countActiveOrders(id) {
+    return db
+      .prepare(
+        "SELECT COUNT(*) AS n FROM orders WHERE stall_id = ? AND status IN ('pending_payment','accepted','preparing','ready')"
+      )
+      .get(id).n;
+  },
+
+  // "Removing" keeps the stall's orders so past sales stay in the reports; it only
+  // hides the stall from students and blocks its login.
+  remove(id) {
+    db.transaction(() => {
+      const stall = db.prepare('SELECT user_id FROM stalls WHERE id = ?').get(id);
+      db.prepare('UPDATE stalls SET active = 0 WHERE id = ?').run(id);
+      db.prepare("UPDATE users SET status = 'disabled' WHERE id = ?").run(stall.user_id);
+    })();
+  },
+
+  restore(id) {
+    db.transaction(() => {
+      const stall = db.prepare('SELECT user_id FROM stalls WHERE id = ?').get(id);
+      db.prepare('UPDATE stalls SET active = 1 WHERE id = ?').run(id);
+      db.prepare("UPDATE users SET status = 'approved' WHERE id = ?").run(stall.user_id);
+    })();
   },
 
   findById(id) {

@@ -12,7 +12,8 @@
   <div class="col-auto"><label class="form-label small mb-0" for="to">To</label>
     <input class="form-control form-control-sm" type="date" id="to" name="to" value="<%= filter.to %>"></div>
   <div class="col-auto"><button class="btn btn-sm btn-primary" type="submit">Apply</button>
-    <a class="btn btn-sm btn-outline-secondary" href="/admin/reports">All time</a></div>
+    <a class="btn btn-sm btn-outline-secondary" href="/admin/reports">All time</a>
+    <a class="btn btn-sm btn-success" href="/admin/reports/export.csv?from=<%= encodeURIComponent(filter.from) %>&to=<%= encodeURIComponent(filter.to) %>">Download sales (CSV)</a></div>
 </form>
 <p class="text-muted small">Sales count only orders whose payment a stall has verified (accepted through picked up). Rejected and unchecked orders are excluded. Dates use Philippine time.</p>
 

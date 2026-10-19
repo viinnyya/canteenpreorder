@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt');
 const Stall = require('../models/stall');
 const User = require('../models/user');
+const MenuItem = require('../models/menuItem');
+const menuController = require('./menuController');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const str = (v) => (typeof v === 'string' ? v : '');
@@ -24,8 +26,63 @@ function renderPage(res, { status = 200, errors = [], values = {}, notice = null
   });
 }
 
+const STALL_NOTICES = {
+  created: 'Stall account created.',
+  removed: 'Stall removed. Its login is disabled and students no longer see it. Past sales are kept.',
+  restored: 'Stall restored. Its login works again.'
+};
+
 function showStalls(req, res) {
-  renderPage(res, { notice: req.query.notice === 'created' ? 'Stall account created.' : null });
+  let notice = STALL_NOTICES[req.query.notice] || null;
+  if (req.query.notice === 'imported') {
+    notice = 'Import finished: ' + (parseInt(req.query.added, 10) || 0) + ' added, ' + (parseInt(req.query.updated, 10) || 0) + ' updated.';
+  }
+  renderPage(res, { notice });
+}
+
+function loadStall(req, res) {
+  const id = Number(req.params.id);
+  const stall = Number.isInteger(id) && id > 0 ? Stall.findById(id) : null;
+  if (!stall) res.status(404).render('errors/404');
+  return stall;
+}
+
+function removeStall(req, res) {
+  const stall = loadStall(req, res);
+  if (!stall) return;
+  if (!stall.active) return res.redirect('/admin/stalls');
+  const open = Stall.countActiveOrders(stall.id);
+  if (open > 0) {
+    return renderPage(res, {
+      status: 400,
+      errors: [stall.name + ' still has ' + open + ' unfinished order' + (open === 1 ? '' : 's') + '. Let the stall finish or reject them first.']
+    });
+  }
+  Stall.remove(stall.id);
+  res.redirect('/admin/stalls?notice=removed');
+}
+
+function restoreStall(req, res) {
+  const stall = loadStall(req, res);
+  if (!stall) return;
+  Stall.restore(stall.id);
+  res.redirect('/admin/stalls?notice=restored');
+}
+
+function exportStallMenu(req, res) {
+  const stall = loadStall(req, res);
+  if (!stall) return;
+  menuController.sendMenuCsv(res, stall);
+}
+
+function importStallMenu(req, res) {
+  const stall = loadStall(req, res);
+  if (!stall) return;
+  const { errors, result } = menuController.runImport(req, stall);
+  if (errors.length > 0) {
+    return renderPage(res, { status: 400, errors: ['Import for ' + stall.name + ' failed, nothing was changed.'].concat(errors) });
+  }
+  res.redirect('/admin/stalls?notice=imported&added=' + result.added + '&updated=' + result.updated);
 }
 
 async function createStall(req, res, next) {
@@ -37,7 +94,11 @@ async function createStall(req, res, next) {
 
     const errors = validate({ name, description, email, password });
     if (errors.length === 0 && User.findByEmail(email)) errors.push('That email is already used by another account.');
-    if (errors.length === 0 && Stall.findByName(name)) errors.push('A stall with that name already exists.');
+    if (errors.length === 0) {
+      const sameName = Stall.findByName(name);
+      if (sameName && !sameName.active) errors.push('A removed stall already uses that name. Restore it from the list instead.');
+      else if (sameName) errors.push('A stall with that name already exists.');
+    }
 
     if (errors.length > 0) {
       return renderPage(res, { status: 400, errors, values: { name, description, email } });
@@ -79,6 +140,10 @@ function setStudentStatus(status) {
 module.exports = {
   showStalls,
   createStall,
+  removeStall,
+  restoreStall,
+  exportStallMenu,
+  importStallMenu,
   showStudents,
   approveStudent: setStudentStatus('approved'),
   rejectStudent: setStudentStatus('rejected')
