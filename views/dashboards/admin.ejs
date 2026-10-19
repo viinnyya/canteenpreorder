@@ -1,39 +1,34 @@
 <%- include('../partials/header', { title: 'Admin' }) %>
-<h1 class="h3 mb-3">Admin dashboard</h1>
+<h1 class="h3 mb-3">Admin</h1>
+<%- include('../admin/_tabs', { active: 'overview' }) %>
+
+<% if (counts.pending > 0) { %>
+  <div class="alert alert-warning d-flex justify-content-between align-items-center">
+    <span><strong><%= counts.pending %></strong> student registration<%= counts.pending === 1 ? '' : 's' %> waiting for approval.</span>
+    <a href="/admin/students" class="btn btn-sm btn-warning">Review</a>
+  </div>
+<% } %>
+
 <div class="row g-3 mb-4">
-  <div class="col-sm-6 col-lg-3">
-    <div class="card shadow-sm"><div class="card-body">
-      <div class="text-muted small">Stalls</div>
-      <div class="fs-3"><%= stalls.length %></div>
-    </div></div>
-  </div>
-  <div class="col-sm-6 col-lg-3">
-    <div class="card shadow-sm"><div class="card-body">
-      <div class="text-muted small">Registered students</div>
-      <div class="fs-3"><%= studentCount %></div>
-    </div></div>
-  </div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body">
+    <div class="text-muted small">Active stalls</div><div class="fs-3"><%= stallCount %></div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body">
+    <div class="text-muted small">Approved students</div><div class="fs-3"><%= counts.approved %></div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body">
+    <div class="text-muted small">Sales today</div><div class="fs-3"><%= peso(today.revenue) %></div>
+    <div class="text-muted small"><%= today.orders %> paid order<%= today.orders === 1 ? '' : 's' %></div></div></div></div>
+  <div class="col-6 col-lg-3"><div class="card shadow-sm"><div class="card-body">
+    <div class="text-muted small">Sales all time</div><div class="fs-3"><%= peso(allTime.revenue) %></div>
+    <div class="text-muted small"><%= allTime.orders %> paid order<%= allTime.orders === 1 ? '' : 's' %></div></div></div></div>
 </div>
 
-<div class="d-flex flex-wrap gap-2 mb-4">
-  <a href="/admin/stalls" class="btn btn-primary">Manage stall accounts</a>
-  <a href="/admin/reports" class="btn btn-outline-primary">Sales reports</a>
-</div>
-
-<div class="card shadow-sm">
-  <div class="card-body">
-    <h2 class="h5">Stall accounts</h2>
-    <table class="table table-sm mb-0">
-      <thead><tr><th>Name</th><th>Email</th><th>Created</th></tr></thead>
-      <tbody>
-        <% stallAccounts.forEach(function (a) { %>
-          <tr><td><%= a.name %></td><td><%= a.email %></td><td><%= formatTime(a.created_at) %></td></tr>
-        <% }) %>
-        <% if (stallAccounts.length === 0) { %>
-          <tr><td colspan="3" class="text-muted">No stall accounts yet.</td></tr>
-        <% } %>
-      </tbody>
-    </table>
-  </div>
-</div>
+<div class="card shadow-sm"><div class="card-body">
+  <h2 class="h5">Top 3 best sellers</h2>
+  <% if (best.length === 0) { %><p class="text-muted mb-0">No paid orders yet.</p><% } else { %>
+  <ol class="mb-2">
+    <% best.forEach(function (b) { %><li><%= b.item %> <span class="text-muted">(<%= b.stall %>)</span> &middot; <%= b.sold %> sold</li><% }) %>
+  </ol>
+  <a href="/admin/reports">Full sales report &rarr;</a>
+  <% } %>
+</div></div>
 <%- include('../partials/footer') %>

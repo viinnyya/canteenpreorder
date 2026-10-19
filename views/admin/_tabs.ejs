@@ -1,0 +1,11 @@
+<%# Admin navigation tabs. Pass { active: 'overview' | 'students' | 'stalls' | 'reports' } %>
+<ul class="nav nav-tabs mb-4">
+  <li class="nav-item"><a class="nav-link <%= active === 'overview' ? 'active' : '' %>" href="/admin">Overview</a></li>
+  <li class="nav-item">
+    <a class="nav-link <%= active === 'students' ? 'active' : '' %>" href="/admin/students">Students
+      <% if (typeof pendingCount !== 'undefined' && pendingCount > 0) { %><span class="badge text-bg-danger"><%= pendingCount %></span><% } %>
+    </a>
+  </li>
+  <li class="nav-item"><a class="nav-link <%= active === 'stalls' ? 'active' : '' %>" href="/admin/stalls">Stalls</a></li>
+  <li class="nav-item"><a class="nav-link <%= active === 'reports' ? 'active' : '' %>" href="/admin/reports">Reports</a></li>
+</ul>

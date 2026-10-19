@@ -1,0 +1,45 @@
+<%- include('../partials/header', { title: 'Students' }) %>
+<h1 class="h3 mb-3">Admin</h1>
+<%- include('_tabs', { active: 'students' }) %>
+
+<% if (notice) { %><div class="alert alert-success"><%= notice %></div><% } %>
+
+<ul class="nav nav-pills mb-3">
+  <% ['pending', 'approved', 'rejected'].forEach(function (s) { %>
+    <li class="nav-item">
+      <a class="nav-link <%= status === s ? 'active' : '' %>" href="/admin/students?status=<%= s %>">
+        <%= s.charAt(0).toUpperCase() + s.slice(1) %> <span class="badge text-bg-light"><%= counts[s] %></span>
+      </a>
+    </li>
+  <% }) %>
+</ul>
+
+<div class="card shadow-sm"><div class="card-body">
+  <% if (students.length === 0) { %>
+    <p class="text-muted mb-0">No <%= status %> students.</p>
+  <% } else { %>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Name</th><th>Email</th><th>Registered</th><th></th></tr></thead>
+      <tbody>
+        <% students.forEach(function (s) { %>
+          <tr>
+            <td><%= s.name %></td>
+            <td><%= s.email %></td>
+            <td><%= formatTime(s.created_at) %></td>
+            <td class="text-end">
+              <% if (status !== 'approved') { %>
+                <form method="POST" action="/admin/students/<%= s.id %>/approve" class="d-inline"><button class="btn btn-sm btn-success">Approve</button></form>
+              <% } %>
+              <% if (status !== 'rejected') { %>
+                <form method="POST" action="/admin/students/<%= s.id %>/reject" class="d-inline"><button class="btn btn-sm btn-outline-danger"><%= status === 'approved' ? 'Block' : 'Reject' %></button></form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div></div>
+<%- include('../partials/footer') %>

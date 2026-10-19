@@ -4,6 +4,7 @@
     <div class="card shadow-sm">
       <div class="card-body p-4">
         <h1 class="h4 mb-3">Log in</h1>
+        <% if (typeof notice !== 'undefined' && notice) { %><div class="alert alert-success"><%= notice %></div><% } %>
         <% if (errors && errors.length) { %>
           <div class="alert alert-danger">
             <ul class="mb-0">
