@@ -1,0 +1,10 @@
+<%# Horizontal bars. Usage: include('../partials/chart-bars', { rows: rows }) %>
+<div class="hbars">
+  <% rows.forEach(function (r) { %>
+    <div class="hb" tabindex="0" title="<%= r.tip %>">
+      <div class="hb-name"><%= r.name %><% if (r.sub) { %> <small><%= r.sub %></small><% } %></div>
+      <div class="hb-track"><div class="hb-fill" style="--w:<%= r.pct %>%"></div></div>
+      <div class="hb-val"><%= r.display %></div>
+    </div>
+  <% }) %>
+</div>
