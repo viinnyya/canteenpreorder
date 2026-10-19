@@ -1,35 +1,36 @@
 const Report = require('../models/report');
 const csv = require('../lib/csv');
 
-const { cleanDate } = require('../lib/dates');
-
-// Reads and validates ?from=&to= . Returns { errors, from, to }.
-function readRange(query) {
-  const errors = [];
-  let from = cleanDate(query.from);
-  let to = cleanDate(query.to);
-  if (query.from && !from) errors.push('"From" is not a valid date.');
-  if (query.to && !to) errors.push('"To" is not a valid date.');
-  if (from && to && from > to) {
-    errors.push('"From" must not be after "To".');
-    from = to = '';
-  }
-  return { errors, from, to };
-}
+const charts = require('../lib/charts');
+const { todayManila, seriesWindow, readRange } = require('../lib/dates');
 
 function show(req, res) {
   const { errors, from, to } = readRange(req.query);
   const filter = { from, to };
+  const win = seriesWindow(filter, todayManila());
   const best = Report.bestSellers(filter);
+  const stalls = Report.byStall(filter);
   res.status(errors.length ? 400 : 200).render('admin/reports', {
     errors,
     filter,
     summary: Report.summary(filter),
-    best,
-    maxSold: best.length ? best[0].sold : 0,
-    stalls: Report.byStall(filter),
-    days: Report.byDay(filter),
-    hours: Report.byHour(filter),
+    win,
+    winLabel: charts.niceDate(win.start) + ' to ' + charts.niceDate(win.end),
+    dailyChart: charts.dailyRevenue(Report.dailySeries(filter, win)),
+    hourChart: charts.hourlyOrders(Report.hourlySeries(filter)),
+    bestRows: charts.bars(best, {
+      value: (b) => b.sold,
+      name: (b) => b.item,
+      sub: (b) => b.stall,
+      display: (b) => b.sold + ' sold \u00B7 ' + charts.peso(b.revenue),
+      tip: (b) => b.item + ' (' + b.stall + '): ' + b.sold + ' sold, ' + charts.peso(b.revenue)
+    }),
+    stallRows: charts.bars(stalls, {
+      value: (s) => s.revenue,
+      name: (s) => s.stall,
+      sub: (s) => s.orders + (s.orders === 1 ? ' order' : ' orders'),
+      display: (s) => charts.peso(s.revenue)
+    }),
     statuses: Report.statusCounts(filter)
   });
 }

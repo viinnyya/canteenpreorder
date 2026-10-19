@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "db:setup": "node db/setup.js"
+    "db:setup": "node db/setup.js",
+    "db:demo": "node db/demo-data.js"
   },
   "license": "MIT",
   "dependencies": {

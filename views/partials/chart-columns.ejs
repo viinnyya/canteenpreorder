@@ -1,0 +1,22 @@
+<%# Column chart. Usage: include('../partials/chart-columns', { chart: chart, label: 'Daily sales' }) %>
+<div class="chart" role="group" aria-label="<%= label %>">
+  <div class="chart-y" aria-hidden="true">
+    <% chart.ticks.forEach(function (t) { %><span style="bottom:<%= t.pct %>%"><%= t.label %></span><% }) %>
+  </div>
+  <div class="chart-area">
+    <div class="chart-grid" aria-hidden="true">
+      <% chart.ticks.forEach(function (t) { %><i class="<%= t.pct === 0 ? 'base' : '' %>" style="bottom:<%= t.pct %>%"></i><% }) %>
+    </div>
+    <div class="chart-cols">
+      <% chart.cols.forEach(function (c, i) { %>
+        <div class="cc" role="img" tabindex="0" aria-label="<%= c.aria %>" data-tip="<%= c.tip %>" style="--h:<%= c.pct %>%;--i:<%= i %>">
+          <% if (c.peak) { %><b class="cc-val"><%= c.valueLabel %></b><% } %>
+          <span class="bar"></span>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+  <div class="chart-x" aria-hidden="true">
+    <% chart.cols.forEach(function (c) { %><span><%= c.label %><small><%= c.sub %></small></span><% }) %>
+  </div>
+</div>

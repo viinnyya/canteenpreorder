@@ -7,12 +7,17 @@ const PAID = "('accepted','preparing','ready','picked_up','no_show')";
 // created_at is stored in UTC; reports group by Philippine date.
 const DAY = "date(o.created_at, '+8 hours')";
 
-function range({ from, to }) {
-  const clauses = [`o.status IN ${PAID}`];
+const { dayList } = require('../lib/dates');
+
+// filter: { from, to, stallId }. With stallId, every report covers that one stall only.
+// paidOnly = false is for the status breakdown, which must also see rejected and cancelled orders.
+function range({ from, to, stallId }, paidOnly = true) {
+  const clauses = paidOnly ? [`o.status IN ${PAID}`] : [];
   const params = [];
   if (from) { clauses.push(`${DAY} >= ?`); params.push(from); }
   if (to) { clauses.push(`${DAY} <= ?`); params.push(to); }
-  return { where: clauses.join(' AND '), params };
+  if (stallId) { clauses.push('o.stall_id = ?'); params.push(stallId); }
+  return { where: clauses.length ? clauses.join(' AND ') : '1 = 1', params };
 }
 
 const Report = {
@@ -105,13 +110,68 @@ const Report = {
 
   // All orders in the period, any status, to show how many were rejected or never picked up.
   statusCounts(filter) {
-    const clauses = [];
-    const params = [];
-    if (filter.from) { clauses.push(`${DAY} >= ?`); params.push(filter.from); }
-    if (filter.to) { clauses.push(`${DAY} <= ?`); params.push(filter.to); }
-    const where = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
+    const { where, params } = range(filter, false);
     return db
-      .prepare(`SELECT o.status, COUNT(*) AS count FROM orders o ${where} GROUP BY o.status`)
+      .prepare(`SELECT o.status, COUNT(*) AS count FROM orders o WHERE ${where} GROUP BY o.status`)
+      .all(...params);
+  },
+
+  // Total number of items sold (not orders).
+  itemsSold(filter) {
+    const { where, params } = range(filter);
+    return db
+      .prepare(
+        `SELECT COALESCE(SUM(oi.quantity), 0) AS items
+         FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE ${where}`
+      )
+      .get(...params).items;
+  },
+
+  // One entry for every date in the window, zeros included, so the chart has no gaps.
+  dailySeries(filter, win) {
+    const { where, params } = range({ ...filter, from: win.start, to: win.end });
+    const rows = db
+      .prepare(
+        `SELECT ${DAY} AS day, COUNT(*) AS orders, COALESCE(SUM(o.total), 0) AS revenue
+         FROM orders o WHERE ${where} GROUP BY day`
+      )
+      .all(...params);
+    const byDate = new Map(rows.map((r) => [r.day, r]));
+    return dayList(win.start, win.end).map((d) => {
+      const r = byDate.get(d);
+      return r ? { day: d, orders: r.orders, revenue: Math.round(r.revenue * 100) / 100 } : { day: d, orders: 0, revenue: 0 };
+    });
+  },
+
+  // Orders per hour of the day (Philippine time): always 24 entries.
+  hourlySeries(filter) {
+    const { where, params } = range(filter);
+    const rows = db
+      .prepare(
+        `SELECT CAST(strftime('%H', o.created_at, '+8 hours') AS INTEGER) AS hour,
+                COUNT(*) AS orders, COALESCE(SUM(o.total), 0) AS revenue
+         FROM orders o WHERE ${where} GROUP BY hour`
+      )
+      .all(...params);
+    const byHour = new Map(rows.map((r) => [r.hour, r]));
+    return Array.from({ length: 24 }, (_, h) => {
+      const r = byHour.get(h);
+      return { hour: h, orders: r ? r.orders : 0, revenue: r ? Math.round(r.revenue * 100) / 100 : 0 };
+    });
+  },
+
+  byCategory(filter) {
+    const { where, params } = range(filter);
+    return db
+      .prepare(
+        `SELECT m.category AS category, SUM(oi.quantity) AS sold, SUM(oi.quantity * oi.price) AS revenue
+         FROM order_items oi
+         JOIN orders o ON o.id = oi.order_id
+         JOIN menu_items m ON m.id = oi.menu_item_id
+         WHERE ${where}
+         GROUP BY m.category
+         ORDER BY revenue DESC, m.category`
+      )
       .all(...params);
   }
 };

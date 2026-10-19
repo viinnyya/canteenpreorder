@@ -12,7 +12,7 @@ app.set('views', path.join(__dirname, 'views'));
 // Helpers every EJS view can use.
 app.locals.orderStatus = require('./config/orderStatus');
 app.locals.formatPickup = require('./lib/pickup').format;
-app.locals.peso = (n) => '₱' + Number(n).toFixed(2);
+app.locals.peso = require('./lib/charts').peso;
 app.locals.formatTime = (s) =>
   new Date(String(s).replace(' ', 'T') + 'Z').toLocaleString('en-PH', {
     timeZone: 'Asia/Manila',

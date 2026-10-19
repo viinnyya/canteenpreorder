@@ -8,6 +8,7 @@ router.use('/', require('./dashboard'));
 router.use('/', require('./menu'));
 router.use('/', require('./orders'));
 router.use('/', require('./stallOrders'));
+router.use('/', require('./stallSales'));
 router.use('/', require('./admin'));
 router.use('/', require('./reports'));
 router.use('/', require('./account'));
