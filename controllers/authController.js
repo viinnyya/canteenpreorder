@@ -11,8 +11,14 @@ function homeFor(role) {
   return '/student';
 }
 
+const LOGIN_NOTICES = {
+  registered: 'Registration received. An administrator must approve your account before you can log in.',
+  signedout: 'You were signed out because your account is no longer active.',
+  password: 'Password changed. Please log in again.'
+};
+
 function showLogin(req, res) {
-  res.render('login', { errors: [], values: {} });
+  res.render('login', { errors: [], values: {}, notice: LOGIN_NOTICES[req.query.notice] || null });
 }
 
 function showRegister(req, res) {
@@ -79,9 +85,10 @@ async function register(req, res, next) {
 
     const passwordHash = await bcrypt.hash(password, 10);
     // Self-registration always creates a student. Stall and admin roles can never be chosen here.
-    const id = User.create({ name, email, passwordHash, role: 'student' });
+    // New students wait for an admin to approve them, so they are not logged in yet.
+    User.create({ name, email, passwordHash, role: 'student', status: 'pending' });
 
-    startSession(req, res, next, { id, name, email, role: 'student' });
+    res.redirect('/login?notice=registered');
   } catch (err) {
     next(err);
   }
@@ -106,6 +113,17 @@ async function login(req, res, next) {
       return res
         .status(401)
         .render('login', { errors: ['Invalid email or password.'], values: { email } });
+    }
+
+    if (user.status !== 'approved') {
+      const reasons = {
+        pending: 'Your registration is still waiting for admin approval.',
+        rejected: 'Your registration was not approved. Please contact the canteen administrators.',
+        disabled: 'This account has been disabled. Please contact the canteen administrators.'
+      };
+      return res
+        .status(403)
+        .render('login', { errors: [reasons[user.status] || 'This account cannot log in.'], values: { email } });
     }
 
     startSession(req, res, next, user);

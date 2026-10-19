@@ -1,9 +1,9 @@
 const express = require('express');
-const { requireRole } = require('../middleware/auth');
+const { requireAdmin } = require('../middleware/auth');
 const reports = require('../controllers/reportController');
 
 const router = express.Router();
 
-router.get('/admin/reports', requireRole('admin'), reports.show);
+router.get('/admin/reports', requireAdmin, reports.show);
 
 module.exports = router;

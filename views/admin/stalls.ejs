@@ -1,8 +1,6 @@
 <%- include('../partials/header', { title: 'Stall accounts' }) %>
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h3 mb-0">Stall accounts</h1>
-  <a href="/admin" class="btn btn-outline-secondary btn-sm">Back to dashboard</a>
-</div>
+<h1 class="h3 mb-3">Admin</h1>
+<%- include('_tabs', { active: 'stalls' }) %>
 
 <% if (notice) { %><div class="alert alert-success"><%= notice %></div><% } %>
 <% if (errors.length) { %>

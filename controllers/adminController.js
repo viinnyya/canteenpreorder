@@ -51,4 +51,35 @@ async function createStall(req, res, next) {
   }
 }
 
-module.exports = { showStalls, createStall };
+const STUDENT_NOTICES = {
+  approved: 'Student approved. They can log in now.',
+  rejected: 'Student rejected. They can no longer log in.'
+};
+
+function showStudents(req, res) {
+  const status = ['pending', 'approved', 'rejected'].includes(req.query.status) ? req.query.status : 'pending';
+  res.render('admin/students', {
+    status,
+    students: User.listStudentsByStatus(status),
+    counts: User.studentCounts(),
+    notice: STUDENT_NOTICES[req.query.notice] || null
+  });
+}
+
+function setStudentStatus(status) {
+  return (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1 || User.setStudentStatus(id, status) === 0) {
+      return res.status(404).render('errors/404');
+    }
+    res.redirect('/admin/students?status=' + (status === 'approved' ? 'approved' : 'rejected') + '&notice=' + status);
+  };
+}
+
+module.exports = {
+  showStalls,
+  createStall,
+  showStudents,
+  approveStudent: setStudentStatus('approved'),
+  rejectStudent: setStudentStatus('rejected')
+};
