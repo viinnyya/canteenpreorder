@@ -8,6 +8,7 @@ const db = require('../config/db');
 
 const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
 db.exec(schema);
+require('./migrate').migrate(db);
 
 const adminEmail = (process.env.SEED_ADMIN_EMAIL || 'admin@my.cspc.edu.ph').toLowerCase();
 const adminPassword = process.env.SEED_ADMIN_PASSWORD || 'change-me-before-demo';
