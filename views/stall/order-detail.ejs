@@ -15,6 +15,7 @@
       <div class="card-body">
         <p class="mb-1"><strong>Student:</strong> <%= order.student_name %> (<%= order.student_email %>)</p>
         <p class="mb-1"><strong>Placed:</strong> <%= formatTime(order.created_at) %></p>
+        <p class="mb-1"><strong>Pickup:</strong> <%= formatPickup(order.pickup_time) %></p>
         <p class="mb-3"><strong>Status:</strong> <%- include('../partials/status-badge', { status: order.status }) %></p>
         <table class="table table-sm mb-3">
           <thead><tr><th>Item</th><th>Qty</th><th class="text-end">Price</th></tr></thead>
@@ -26,14 +27,21 @@
           <tfoot><tr><th colspan="2">Total</th><th class="text-end"><%= peso(order.total) %></th></tr></tfoot>
         </table>
 
+        <% if (order.status === 'rejected' && order.reject_reason) { %>
+          <p class="mb-2"><strong>Rejection reason:</strong> <%= order.reject_reason %></p>
+        <% } %>
         <% if (transitions.length === 0) { %>
           <p class="text-muted mb-0">This order is finished. No further changes are possible.</p>
         <% } else { %>
           <div class="d-flex flex-wrap gap-2">
             <% transitions.forEach(function (t) { %>
-              <form method="POST" action="/stall/orders/<%= order.id %>/status" class="m-0">
+              <form method="POST" action="/stall/orders/<%= order.id %>/status" class="m-0 <%= t === 'rejected' ? 'd-flex gap-2' : '' %>">
                 <input type="hidden" name="status" value="<%= t %>">
-                <button type="submit" class="btn <%= (t === 'rejected' || t === 'no_show') ? 'btn-outline-danger' : 'btn-primary' %>">
+                <% if (t === 'rejected') { %>
+                  <input type="text" name="reason" class="form-control" maxlength="200" required
+                         placeholder="Reason (e.g. amount does not match)" aria-label="Rejection reason">
+                <% } %>
+                <button type="submit" class="btn text-nowrap <%= (t === 'rejected' || t === 'no_show') ? 'btn-outline-danger' : 'btn-primary' %>">
                   <%= orderStatus.ACTIONS[t] %>
                 </button>
               </form>

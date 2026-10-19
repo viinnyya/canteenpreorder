@@ -1,13 +1,7 @@
 const Report = require('../models/report');
 const csv = require('../lib/csv');
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-function cleanDate(v) {
-  if (typeof v !== 'string' || !DATE_RE.test(v)) return '';
-  const d = new Date(v + 'T00:00:00Z');
-  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== v ? '' : v;
-}
+const { cleanDate } = require('../lib/dates');
 
 // Reads and validates ?from=&to= . Returns { errors, from, to }.
 function readRange(query) {

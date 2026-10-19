@@ -10,6 +10,7 @@ router.post('/stalls/:id/order', requireRole('student'), orders.handleUpload, or
 
 router.get('/orders', requireRole('student'), orders.listMine);
 router.get('/orders/:id', requireRole('student'), orders.showMine);
+router.post('/orders/:id/cancel', requireRole('student'), orders.cancel);
 
 // Any logged-in role may ask; the controller checks who really owns the order.
 router.get('/orders/:id/screenshot', requireLogin, orders.screenshot);
