@@ -24,6 +24,11 @@
           <input class="form-control" id="description" name="description" maxlength="120" value="<%= values.description || '' %>">
         </div>
         <div class="mb-2">
+          <label class="form-label" for="gcashNumber">GCash number</label>
+          <input class="form-control" type="tel" id="gcashNumber" name="gcashNumber" inputmode="numeric" placeholder="09XXXXXXXXX" maxlength="16" required value="<%= values.gcashNumber || '' %>">
+          <div class="form-text">Students send their payment to this number.</div>
+        </div>
+        <div class="mb-2">
           <label class="form-label" for="email">Login email</label>
           <input class="form-control" type="email" id="email" name="email" required value="<%= values.email || '' %>">
         </div>
@@ -44,7 +49,7 @@
           <tbody>
             <% stalls.forEach(function (s) { %>
               <tr class="<%= s.active ? '' : 'table-secondary' %>">
-                <td><strong><%= s.name %></strong><br><span class="text-muted small"><%= s.description || '' %></span></td>
+                <td><strong><%= s.name %></strong><br><span class="text-muted small"><%= s.description || '' %></span><br><span class="small">GCash: <%= s.gcash_number || '—' %></span></td>
                 <td><%= s.email %></td>
                 <td><%= s.order_count %></td>
                 <td><span class="badge text-bg-<%= s.active ? 'success' : 'secondary' %>"><%= s.active ? 'Active' : 'Removed' %></span></td>

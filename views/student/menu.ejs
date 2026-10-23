@@ -62,6 +62,14 @@
           Send the total to the stall's GCash, then enter the reference number and upload a screenshot
           of the receipt. The stall checks it before accepting your order.
         </p>
+        <% if (stall.gcash_number) { %>
+          <div class="alert alert-info py-2">
+            Send payment to <strong><%= stall.name %></strong>'s GCash:
+            <strong class="fs-5 ms-1 user-select-all"><%= stall.gcash_number %></strong>
+          </div>
+        <% } else { %>
+          <div class="alert alert-warning py-2 small">This stall hasn't set a GCash number yet. Ask the stall for it before paying.</div>
+        <% } %>
         <div class="mb-3">
           <label for="paymentRef" class="form-label">GCash reference number</label>
           <input type="text" class="form-control" id="paymentRef" name="paymentRef" value="<%= values.paymentRef || '' %>" autocomplete="off">

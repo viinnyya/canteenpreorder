@@ -10,7 +10,7 @@ const Stall = {
   allWithAccounts() {
     return db
       .prepare(
-        `SELECT s.id, s.name, s.description, s.active, u.email, u.created_at,
+        `SELECT s.id, s.name, s.description, s.gcash_number, s.active, u.email, u.created_at,
                 (SELECT COUNT(*) FROM orders o WHERE o.stall_id = s.id) AS order_count
          FROM stalls s JOIN users u ON u.id = s.user_id
          ORDER BY s.active DESC, s.name`
@@ -63,7 +63,7 @@ const Stall = {
   },
 
   // Creates the login account and the stall together, or neither.
-  createWithAccount({ name, description, email, passwordHash }) {
+  createWithAccount({ name, description, gcashNumber, email, passwordHash }) {
     const run = db.transaction(() => {
       const userId = db
         .prepare(
@@ -71,8 +71,8 @@ const Stall = {
         )
         .run(name, String(email).toLowerCase(), passwordHash).lastInsertRowid;
       return db
-        .prepare('INSERT INTO stalls (name, description, user_id) VALUES (?, ?, ?)')
-        .run(name, description || null, userId).lastInsertRowid;
+        .prepare('INSERT INTO stalls (name, description, gcash_number, user_id) VALUES (?, ?, ?, ?)')
+        .run(name, description || null, gcashNumber || null, userId).lastInsertRowid;
     });
     return run();
   }

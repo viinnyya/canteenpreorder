@@ -60,6 +60,7 @@ function migrate(db) {
   // Existing accounts stay approved; only new student registrations start as 'pending'.
   addColumn(db, 'users', 'status', "TEXT NOT NULL DEFAULT 'approved'");
   addColumn(db, 'stalls', 'active', 'INTEGER NOT NULL DEFAULT 1');
+  addColumn(db, 'stalls', 'gcash_number', 'TEXT');
   addColumn(db, 'menu_items', 'category', "TEXT NOT NULL DEFAULT 'Meals'");
   rebuildOrders(db);
 }

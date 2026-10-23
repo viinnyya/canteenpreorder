@@ -7,10 +7,19 @@ const menuController = require('./menuController');
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const str = (v) => (typeof v === 'string' ? v : '');
 
-function validate({ name, description, email, password }) {
+// Accepts 0917 123 4567, 0917-123-4567, +639171234567 or 639171234567 and stores it as 09171234567.
+function normalizeGcash(v) {
+  let n = str(v).replace(/[\s-]/g, '');
+  if (n.startsWith('+63')) n = '0' + n.slice(3);
+  else if (n.startsWith('63') && n.length === 12) n = '0' + n.slice(2);
+  return n;
+}
+
+function validate({ name, description, gcashNumber, email, password }) {
   const errors = [];
   if (name.length < 2 || name.length > 40) errors.push('Stall name must be 2 to 40 characters.');
   if (description.length > 120) errors.push('Description must be 120 characters or fewer.');
+  if (!/^09\d{9}$/.test(gcashNumber)) errors.push('Enter a valid GCash number (11 digits, starting with 09).');
   if (!EMAIL_RE.test(email)) errors.push('Enter a valid login email for the stall.');
   if (password.length < 8) errors.push('Password must be at least 8 characters.');
   else if (password.length > 72) errors.push('Password must be at most 72 characters.');
@@ -89,10 +98,11 @@ async function createStall(req, res, next) {
   try {
     const name = str(req.body.name).trim();
     const description = str(req.body.description).trim();
+    const gcashNumber = normalizeGcash(req.body.gcashNumber);
     const email = str(req.body.email).trim().toLowerCase();
     const password = str(req.body.password);
 
-    const errors = validate({ name, description, email, password });
+    const errors = validate({ name, description, gcashNumber, email, password });
     if (errors.length === 0 && User.findByEmail(email)) errors.push('That email is already used by another account.');
     if (errors.length === 0) {
       const sameName = Stall.findByName(name);
@@ -101,11 +111,11 @@ async function createStall(req, res, next) {
     }
 
     if (errors.length > 0) {
-      return renderPage(res, { status: 400, errors, values: { name, description, email } });
+      return renderPage(res, { status: 400, errors, values: { name, description, gcashNumber, email } });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    Stall.createWithAccount({ name, description, email, passwordHash });
+    Stall.createWithAccount({ name, description, gcashNumber, email, passwordHash });
     res.redirect('/admin/stalls?notice=created');
   } catch (err) {
     next(err);
