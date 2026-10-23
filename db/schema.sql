@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS stalls (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   name        TEXT    NOT NULL UNIQUE,
   description TEXT,
+  gcash_number TEXT,                                    -- where students send payment
   user_id     INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
   active      INTEGER NOT NULL DEFAULT 1                -- 0 = removed by an admin (history is kept)
 );

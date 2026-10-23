@@ -33,6 +33,7 @@ const demoStalls = [
     name: 'Aling Rosa Silog',
     email: 'rosa.stall@my.cspc.edu.ph',
     description: 'Silog meals and rice bowls',
+    gcashNumber: '09123456789',
     menu: [
       ['Tapsilog', 75],
       ['Longsilog', 60],
@@ -43,6 +44,7 @@ const demoStalls = [
     name: 'Kape at Tinapay',
     email: 'kape.stall@my.cspc.edu.ph',
     description: 'Coffee, snacks and pastries',
+    gcashNumber: '09123456789',
     menu: [
       ['Iced Coffee', 45],
       ['Ensaymada', 30],
@@ -53,16 +55,22 @@ const demoStalls = [
 
 const findStall = db.prepare('SELECT id FROM stalls WHERE name = ?');
 const insertStall = db.prepare(
-  'INSERT INTO stalls (name, description, user_id) VALUES (?, ?, ?)'
+  'INSERT INTO stalls (name, description, gcash_number, user_id) VALUES (?, ?, ?, ?)'
+);
+const fillGcash = db.prepare(
+  'UPDATE stalls SET gcash_number = ? WHERE name = ? AND gcash_number IS NULL'
 );
 const insertItem = db.prepare(
   'INSERT INTO menu_items (stall_id, name, price) VALUES (?, ?, ?)'
 );
 
 for (const s of demoStalls) {
-  if (findStall.get(s.name)) continue;
+  if (findStall.get(s.name)) {
+    fillGcash.run(s.gcashNumber, s.name); // older databases: give existing demo stalls a number
+    continue;
+  }
   const userId = ensureUser(s.name, s.email, 'stall12345', 'stall');
-  const stallId = insertStall.run(s.name, s.description, userId).lastInsertRowid;
+  const stallId = insertStall.run(s.name, s.description, s.gcashNumber, userId).lastInsertRowid;
   for (const [name, price] of s.menu) insertItem.run(stallId, name, price);
 }
 
